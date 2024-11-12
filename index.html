@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Permissões de Localização e Câmera</title>
+</head>
+<body>
+    <h1>Permissões de Localização e Câmera</h1>
+    <button onclick="getLocation()">Obter Localização</button>
+    <button onclick="takePhoto()">Tirar Foto</button>
+
+    <p id="locationInfo">Localização: </p>
+    <video id="video" autoplay playsinline style="display: none;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        // Função para obter localização
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById("locationInfo").innerHTML =
+                            "Latitude: " + position.coords.latitude + "<br>" +
+                            "Longitude: " + position.coords.longitude;
+                    },
+                    function(error) {
+                        alert("Erro ao acessar localização: " + error.message);
+                    }
+                );
+            } else {
+                alert("Geolocalização não é suportada pelo dispositivo.");
+            }
+        }
+
+        // Função para acessar a câmera e tirar uma foto
+        function takePhoto() {
+            const video = document.getElementById("video");
+            const canvas = document.getElementById("canvas");
+
+            // Solicita acesso à câmera
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.style.display = "block"; // Mostra o vídeo na tela
+                    video.srcObject = stream;
+
+                    // Aguardar um tempo para a câmera estabilizar, então capturar a foto
+                    setTimeout(() => {
+                        canvas.style.display = "block";
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        const context = canvas.getContext("2d");
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                        // Desconecta a câmera
+                        stream.getTracks().forEach(track => track.stop());
+                        video.style.display = "none";
+
+                        // A imagem capturada pode ser convertida em base64 ou enviada a um servidor
+                        const imageData = canvas.toDataURL("image/png");
+                        console.log("Foto capturada em base64:", imageData);
+                    }, 2000); // Aguardar 2 segundos antes de tirar a foto
+                })
+                .catch(error => {
+                    alert("Erro ao acessar a câmera: " + error.message);
+                });
+        }
+    </script>
+</body>
+</html>
